@@ -16,6 +16,7 @@ class Config:
         # Default values
         self.app_name: str = _app_name
         self._general = General()
+        self.ops = OPS()
         self.pretend = False
 
     @property
@@ -49,6 +50,12 @@ class General:
         self.plex_dir: Path = Path("")
         self.log_level = TealLevel.info
         self.types: List[Types] = [Types.QA, Types.CLASS]
+
+
+class OPS:
+    def __init__(self) -> None:
+        self.email: str = ""
+        self.password: str = ""
 
 
 config = Config()

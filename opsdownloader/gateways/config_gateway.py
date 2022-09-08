@@ -7,7 +7,7 @@ from typing import List
 from blulib.config_parser import ConfigParser
 from tealprint import TealPrint
 
-from ..config import General, config
+from ..config import OPS, General, config
 from ..core.type import Types
 
 
@@ -56,3 +56,15 @@ class ConfigGateway:
             general.types = types
 
         return general
+
+    def get_ops(self) -> OPS:
+        ops = OPS()
+
+        self.parser.to_object(ops, "OPS", "email", "password")
+
+        if not ops.email:
+            TealPrint.warning("Missing 'email' under section [OPS] in your configuration", exit=True)
+        if not ops.password:
+            TealPrint.warning("Missing 'password' under section [OPS] in your configuration", exit=True)
+
+        return ops

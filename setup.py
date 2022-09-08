@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 project_slug = "ops-downloader"
-module_name = project_slug.replace('-', "_")
+module_name = project_slug.replace("-", "_")
 
 setup(
     name=project_slug,
@@ -16,10 +16,15 @@ setup(
     description="Downloads objective personality episodes in a plex-friendly format",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=find_packages(),entry_points={"console_scripts": [f"{project_slug}={module_name}.__main__:main"]},include_package_data=True,
-    data_files=[(f"config", [f"config/{project_slug}-example.cfg"])],install_requires=["tealprint","blulib",],
+    packages=find_packages(),
+    entry_points={"console_scripts": [f"{project_slug}={module_name}.__main__:main"]},
+    include_package_data=True,
+    data_files=[("config", [f"config/{project_slug}-example.cfg"])],
+    install_requires=["tealprint", "blulib", "selenium", "chromedriver-autoinstaller"],
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha","Environment :: Console","License :: OSI Approved :: MIT License",
+        "Development Status :: 2 - Pre-Alpha",
+        "Environment :: Console",
+        "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
