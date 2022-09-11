@@ -2,3 +2,4 @@ tealprint
 blulib
 selenium
 chromedriver-autoinstaller
+latest-user-agents

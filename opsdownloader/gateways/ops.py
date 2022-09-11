@@ -1,4 +1,6 @@
+import json
 import re
+import time
 from pathlib import Path
 from time import sleep
 from typing import List, Optional
@@ -16,17 +18,20 @@ from tealprint import TealPrint
 from ..config import config
 from ..core.type import Types
 
+sleep_time = 0.5
+get_element_timeout = 15
+
 
 class OPSEpisodeInfo:
     def __init__(self) -> None:
         self.number: str = ""
         self.title: str = ""
         self.url: str = ""
-        self.download_url: str = ""
+        self.ffmpeg_url: str = ""
 
 
 class OPS:
-    _base_url = "https://www.objectivepersonalitysystem.com/"
+    _base_url = "https://www.objectivepersonalitysystem.com"
     _episode_regexp = re.compile(r"([\w&]+) (\d+[a-d]?).*")
 
     def __init__(self) -> None:
@@ -50,36 +55,55 @@ class OPS:
         episodes: List[OPSEpisodeInfo] = []
 
         self._login()
-        self._get_all_episodes_on_page(type)
+
+        episodes = self._get_all_episodes_on_page(type)
+        # TODO: Remove episodes that are earlier than latest_episode
+
+        # TODO: Get next page if we didn't find our latest episode
+
+        # Get the ffmpeg URL for each episode
+        for episode in episodes:
+            self._get_ffmpeg_url(episode)
 
         return episodes
 
     def _login(self) -> None:
         TealPrint.info("Logging in to OPS", color=attr("bold"), push_indent=True)
         TealPrint.info("Opening login page")
-        self.driver.get(OPS._base_url + "/library")
-        sleep(1)
+        self.driver.get(OPS._base_url)
+        sleep(sleep_time)
 
         try:
+            # Find the library button
+            self.driver.find_element(By.XPATH, ".//a[contains(@href,'/library')]")
+            sleep(sleep_time)
+
+        except NoSuchElementException as e:
+            TealPrint.error(f"Failed to find library button; {e.msg}", exit=True)
+
+        self.driver.get(f"{OPS._base_url}/library")
+        sleep(sleep_time)
+
+        try:
+            login_button = self._get_element(By.XPATH, ".//*[contains(text(), 'Log In')]")
             TealPrint.info("Clicking login button")
-            login_button = self.driver.find_element(By.XPATH, ".//*[contains(text(), 'Log In')]")
             login_button.click()
-            sleep(2)
+            sleep(sleep_time)
 
             TealPrint.info("Entering email")
             email_input = self.driver.find_element(By.NAME, "email")
             email_input.send_keys(config.ops.email)
-            sleep(2)
+            sleep(sleep_time)
 
             TealPrint.info("Entering password")
             password_input = self.driver.find_element(By.NAME, "password")
             password_input.send_keys(config.ops.password)
-            sleep(2)
+            sleep(sleep_time)
 
             TealPrint.info("Clicking login button")
             login_button = self.driver.find_element(By.XPATH, ".//*[contains(text(), 'Log in')]")
             login_button.click()
-            sleep(2)
+            sleep(sleep_time)
 
         except NoSuchElementException as e:
             TealPrint.error(f"Failed to get element; {e.msg}", exit=True)
@@ -100,6 +124,8 @@ class OPS:
 
         except NoSuchElementException as e:
             TealPrint.error(f"Failed to get videos on page; {e.msg}", exit=True)
+
+        TealPrint.pop_indent()
 
         return episodes
 
@@ -146,3 +172,32 @@ class OPS:
             return Types.QA
         if op_type == "Class":
             return Types.CLASS
+
+    def _get_ffmpeg_url(self, episode: OPSEpisodeInfo) -> None:
+        TealPrint.info(f"Getting ffmpeg URL for {episode.title}", color=attr("bold"), push_indent=True)
+
+        self.driver.get(episode.url)
+        sleep(5)
+
+        self._get_logs()
+
+        TealPrint.info("Got ffmpeg URL", color=fg("green"), pop_indent=True)
+
+    def _get_logs(self):
+        logs = self.driver.get_log("performance")
+        events = [json.loads(log["message"])["message"] for log in logs]
+        # events = [event for event in events if "Network.response" in event["method"]]
+
+        with open("events.txt", "w") as f:
+            f.writelines(json.dumps(events, indent=4))
+
+        exit(0)
+
+    def _get_element(self, type: str, value: str) -> WebElement:
+        started = time.time()
+        while True:
+            try:
+                return self.driver.find_element(type, value)
+            except NoSuchElementException as e:
+                if time.time() - started > get_element_timeout:
+                    raise e
