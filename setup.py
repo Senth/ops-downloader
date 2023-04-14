@@ -21,7 +21,7 @@ setup(
     include_package_data=True,
     data_files=[("config", [f"config/{project_slug}-example.cfg"])],
     install_requires=[
-        "tealprint",
+        "tealprint==0.3.0",
         "blulib",
         "selenium",
         "chromedriver-autoinstaller",
