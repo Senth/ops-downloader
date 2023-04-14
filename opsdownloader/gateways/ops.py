@@ -52,7 +52,6 @@ class OPS:
 
         self.found_masters: Set[str] = set()
         self.found_master_index: int = -1
-        self.search_input: Optional[WebElement] = None
 
     def get_new_episodes(self, type: Types, latest_episode: Episode) -> List[Episode]:
         episodes: List[Episode] = []
@@ -128,33 +127,18 @@ class OPS:
         TealPrint.info("Logged in to OPS", color=fg("green"), pop_indent=True)
         sleep(page_load_time)
 
-    def _next_page(self, page_number: int) -> None:
-        TealPrint.push_indent(TealLevel.info)
-
-        TealPrint.info(f"Going to page {page_number}...")
-        next_button = self._get_element(By.XPATH, ".//span[contains(text(),'>')]")
-        if not next_button:
-            TealPrint.error("Failed to find next button span >", exit=True)
-
-        for i in range(1, page_number):
-            next_button.click()
-
-        sleep(page_load_time)
-
-        TealPrint.pop_indent()
-
     def _search_episode(self, number: float) -> None:
         TealPrint.info(f"Searching for episode {int(number)}")
 
-        if not self.search_input:
-            self.search_input = self._get_element(By.XPATH, './/input[@type="text"]')
-            if not self.search_input:
-                TealPrint.error("Failed to find search input", exit=True)
+        try:
+            search_input = self._get_element(By.XPATH, './/input[@type="text"]')
 
-        # Search for the episode
-        self.search_input.send_keys(Keys.CONTROL + "a")
-        self.search_input.send_keys(f"{int(number)}")
-        self.search_input.send_keys(Keys.RETURN)
+            # Search for the episode
+            search_input.send_keys(Keys.CONTROL + "a")
+            search_input.send_keys(f"{int(number)}")
+            search_input.send_keys(Keys.RETURN)
+        except NoSuchElementException:
+            TealPrint.error("Failed to find search input", exit=True)
 
         sleep(page_load_time)
 
@@ -228,20 +212,22 @@ class OPS:
         sleep(page_load_time)
 
         # Click on the iframe
-        iframe = self._get_element(By.XPATH, ".//iframe")
-        if not iframe:
-            TealPrint.error("Failed to find iframe", exit=True)
+        try:
+            iframe = self._get_element(By.XPATH, ".//iframe")
 
-        iframe.click()
-        sleep(page_load_time)
+            iframe.click()
+            sleep(page_load_time)
 
-        url = self._get_next_master_json()
-        if not url:
-            TealPrint.error("Failed to find master.json", exit=True)
-            return
+            url = self._get_next_master_json()
+            if not url:
+                TealPrint.error("Failed to find master.json", exit=True)
+                return
 
-        # Convert the URL to work with yt-dlp
-        episode.ops.download_url = url.replace(".json?base64_init=1&", ".mpd?")
+            # Convert the URL to work with yt-dlp
+            episode.ops.download_url = url.replace(".json?base64_init=1&", ".mpd?")
+
+        except NoSuchElementException as e:
+            TealPrint.error(f"Failed to get element; {e.msg}\nURL: {episode.ops.url}", exit=True)
 
         TealPrint.info("Got ffmpeg URL", color=fg("green"), pop_indent=True)
         return
@@ -249,7 +235,7 @@ class OPS:
     def _get_next_master_json(self) -> Optional[str]:
         logs = self.driver.get_log("performance")
 
-        for i in range(self.found_master_index + 1, len(logs)):
+        for i in range(len(logs)):
             message = logs[i]["message"]
             if "master.json" not in message:
                 continue
@@ -268,7 +254,6 @@ class OPS:
 
             # Add to found masters
             self.found_masters.add(url)
-            # self.found_master_index = i
             return url
 
         return None
