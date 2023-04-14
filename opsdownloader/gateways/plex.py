@@ -20,13 +20,15 @@ class Plex:
         # Get from current season
         episode_info = self._get_last_episode_info_from_season(type, season)
         if episode_info:
-            TealPrint.info(f"Found last episode in season {season}: {episode_info.number}")
+            TealPrint.info(f"Found last episode in season {season}: {episode_info.number} ({episode_info.ops.number})")
             return episode_info
 
         # Not current season exists, check previous season
         episode_info = self._get_last_episode_info_from_season(type, season - 1)
         if episode_info:
-            TealPrint.info(f"Found last episode in season {season - 1}: {episode_info.number}")
+            TealPrint.info(
+                f"Found last episode in season {season - 1}: {episode_info.number} ({episode_info.ops.number})"
+            )
             return episode_info
 
         # No previous season exists, create empty episode info
