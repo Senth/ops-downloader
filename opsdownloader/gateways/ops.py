@@ -144,7 +144,7 @@ class OPS:
         TealPrint.pop_indent()
 
     def _search_episode(self, number: float) -> None:
-        TealPrint.info(f"Searching for episode {number}")
+        TealPrint.info(f"Searching for episode {int(number)}")
 
         if not self.search_input:
             self.search_input = self._get_element(By.XPATH, './/input[@type="text"]')
@@ -228,7 +228,7 @@ class OPS:
         sleep(page_load_time)
 
         # Click on the iframe
-        iframe = self.driver.find_element(By.XPATH, ".//iframe")
+        iframe = self._get_element(By.XPATH, ".//iframe")
         if not iframe:
             TealPrint.error("Failed to find iframe", exit=True)
 

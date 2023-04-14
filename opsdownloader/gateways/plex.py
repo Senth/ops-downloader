@@ -17,19 +17,19 @@ class Plex:
 
         # Get from current season
         episode_info = self._get_last_episode_info_from_season(type, season)
+        if episode_info:
+            return episode_info
 
         # Not current season exists, check previous season
-        if not episode_info:
-            episode_info = self._get_last_episode_info_from_season(type, season - 1)
+        episode_info = self._get_last_episode_info_from_season(type, season - 1)
+        if episode_info:
+            return episode_info
 
         # No previous season exists, create empty episode info
-        if not episode_info:
-            episode_info = Episode()
-
-        return episode_info
+        return Episode()
 
     def _get_last_episode_info_from_season(self, type: Types, season: int) -> Optional[Episode]:
-        regexp = re.compile(rf"{type.value} - s{season}e(\d+) - .*\((\d+\.?\d?)\)\.mp4")
+        regexp = re.compile(rf"{type.value} - s{season}e0?0?(\d+) - .*\((\d+\.?\d?)\)\.mp4")
         season_dir: Path = self.dir / type.value / f"Season {season}"
 
         if not season_dir.exists():
@@ -48,6 +48,7 @@ class Plex:
             if internal_episode_number < latest_episode:
                 continue
 
+            latest_episode = internal_episode_number
             episode_info.number = internal_episode_number
             episode_info.ops.number = float(ops_episode_number)
             episode_info.season = season
