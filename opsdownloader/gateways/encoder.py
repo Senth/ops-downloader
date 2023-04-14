@@ -24,7 +24,7 @@ class Encoder:
         stream.run()
 
         # Delete the infile
-        # in_file.unlink(missing_ok=True)
+        in_file.unlink(missing_ok=True)
 
         episode.file = Path(out_file)
 
