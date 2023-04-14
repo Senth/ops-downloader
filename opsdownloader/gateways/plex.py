@@ -36,7 +36,7 @@ class Plex:
         return episode_info
 
     def _get_last_episode_info_from_season(self, type: Types, season: int) -> Optional[PlexEpisodeInfo]:
-        regexp = re.compile(rf"{type.value} - s{season}e(\d+) - .*\((\d+\w?)\)\.mp4")
+        regexp = re.compile(rf"{type.value} - s{season}e(\d+) - .*\((\d+\.?\d?)\)\.mp4")
         season_dir: Path = self.dir / type.value / f"Season {season}"
 
         if not season_dir.exists():

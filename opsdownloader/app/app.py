@@ -1,3 +1,5 @@
+from tealprint import TealConfig, TealLevel
+
 from ..config import config
 from ..core.type import Types
 from ..gateways.config_gateway import ConfigGateway
@@ -15,6 +17,8 @@ class App:
 
         self.plex = Plex(config.general.plex_dir)
 
+        TealConfig.level = TealLevel.debug
+
     def run(self) -> None:
         for type in config.general.types:
             self._run_type(type)
@@ -25,7 +29,7 @@ class App:
 
         # Get new episodes from OPS site
         ops = OPS()
-        ops.get_new_episodes(type, episode_info.ops)
+        new_episodes = ops.get_new_episodes(type, episode_info.ops)
 
         # TODO Download episodes
 
