@@ -1,11 +1,9 @@
 from datetime import datetime
-from pathlib import Path
 
 from colored import attr
 from tealprint import TealConfig, TealLevel, TealPrint
 
 from ..config import config
-from ..core.episode import Episode
 from ..core.type import Types
 from ..gateways.config_gateway import ConfigGateway
 from ..gateways.downloader import Downloader
@@ -25,8 +23,6 @@ class App:
         self.plex = Plex(config.general.plex_dir)
         self.downloader = Downloader()
         self.encoder = Encoder()
-
-        TealConfig.level = TealLevel.debug
 
     def run(self) -> None:
         for type in config.general.types:

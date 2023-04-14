@@ -4,7 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 project_slug = "ops-downloader"
-module_name = project_slug.replace("-", "_")
+module_name = project_slug.replace("-", "")
 
 setup(
     name=project_slug,
