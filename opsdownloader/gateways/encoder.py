@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import ffmpeg
 
 from ..core.episode import Episode
@@ -8,8 +10,9 @@ class Encoder:
         pass
 
     def rerender(self, episode: Episode) -> None:
-        out_file = episode.filename
+        in_file = episode.file
 
+        out_file = episode.filename
         stream = ffmpeg.input(episode.file)
         stream = ffmpeg.output(
             stream,
@@ -19,5 +22,10 @@ class Encoder:
             metadata=f"title={episode.title}",
         )
         stream.run()
+
+        # Delete the infile
+        # in_file.unlink(missing_ok=True)
+
+        episode.file = Path(out_file)
 
         pass

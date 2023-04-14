@@ -22,7 +22,6 @@ class Downloader:
 
     @staticmethod
     def _rename_file(episode: Episode) -> Path:
-        file = Path("tmp.mkv")
-
         new_name = episode.filename.replace(".mp4", ".mkv")
+        file = Path("tmp.mkv")
         return file.rename(new_name)

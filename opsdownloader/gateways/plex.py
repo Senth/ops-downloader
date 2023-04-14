@@ -1,4 +1,5 @@
 import re
+import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -52,3 +53,9 @@ class Plex:
             episode_info.season = season
 
         return episode_info
+
+    def move_episode(self, episode: Episode) -> None:
+        season_dir = self.dir / episode.type.value / f"Season {episode.season}"
+        season_dir.mkdir(parents=True, exist_ok=True)
+
+        shutil.move(episode.file, season_dir / episode.file.name)

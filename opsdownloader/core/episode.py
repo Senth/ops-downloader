@@ -38,7 +38,7 @@ class Episode:
     @property
     def filename_title(self) -> str:
         return (
-            self.title.replace(":", " - ")
+            self.title.replace(":", "—")
             .replace("/", "_")
             .replace("\\", "_")
             .replace("?", "")
