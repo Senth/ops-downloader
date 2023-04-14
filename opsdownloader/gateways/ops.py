@@ -54,10 +54,10 @@ class OPS:
             return
 
         options = Options()
-        options.headless = True
-        options.add_argument("--disable-dev-shm-usage")
+        # options.headless = True
+        # options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--no-sandbox")
-        options.add_argument("--disable-gpu")
+        # options.add_argument("--disable-gpu")
         options.add_argument("--lang=en-us")
         options.add_argument("--remote-debugging-port=9222")
 
@@ -185,7 +185,7 @@ class OPS:
                 TealPrint.error("Failed to find search input", exit=True)
 
         # Search for the episode
-        self.search_input.clear()
+        self.search_input.send_keys(Keys.CONTROL + "a")
         self.search_input.send_keys(episode)
         self.search_input.send_keys(Keys.RETURN)
 
