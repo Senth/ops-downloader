@@ -4,6 +4,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from tealprint import TealPrint
+
 from ..core.episode import Episode
 from ..core.type import Types
 
@@ -18,14 +20,17 @@ class Plex:
         # Get from current season
         episode_info = self._get_last_episode_info_from_season(type, season)
         if episode_info:
+            TealPrint.info(f"Found last episode in season {season}: {episode_info.number}")
             return episode_info
 
         # Not current season exists, check previous season
         episode_info = self._get_last_episode_info_from_season(type, season - 1)
         if episode_info:
+            TealPrint.info(f"Found last episode in season {season - 1}: {episode_info.number}")
             return episode_info
 
         # No previous season exists, create empty episode info
+        TealPrint.warning("No previous season found...")
         return Episode()
 
     def _get_last_episode_info_from_season(self, type: Types, season: int) -> Optional[Episode]:
