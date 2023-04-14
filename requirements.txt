@@ -3,3 +3,6 @@ blulib
 selenium
 chromedriver-autoinstaller
 latest-user-agents
+yt-dlp
+ffmpeg-python
+autosub

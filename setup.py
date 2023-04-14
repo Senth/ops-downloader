@@ -20,7 +20,16 @@ setup(
     entry_points={"console_scripts": [f"{project_slug}={module_name}.__main__:main"]},
     include_package_data=True,
     data_files=[("config", [f"config/{project_slug}-example.cfg"])],
-    install_requires=["tealprint", "blulib", "selenium", "chromedriver-autoinstaller"],
+    install_requires=[
+        "tealprint",
+        "blulib",
+        "selenium",
+        "chromedriver-autoinstaller",
+        "yt-dlp",
+        "ffmpeg-python",
+        "dataclasses",
+        "autosub",
+    ],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
         "Environment :: Console",

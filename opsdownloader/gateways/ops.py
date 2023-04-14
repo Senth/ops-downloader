@@ -18,29 +18,12 @@ from selenium.webdriver.remote.webelement import WebElement
 from tealprint import TealLevel, TealPrint
 
 from ..config import config
+from ..core.episode import Episode
 from ..core.type import Types
 
 sleep_time = 0.5
 page_load_time = 5
 get_element_timeout = 15
-
-
-class OPSEpisodeInfo:
-    def __init__(self) -> None:
-        self.number: str = ""
-        self.title: str = ""
-        self.url: str = ""
-        self.download_url: str = ""
-
-    def previous_episode(self) -> str:
-        """Get the previous episode number.
-
-        For example:
-        265.4 -> 264
-        263 -> 262
-        """
-        number = float(self.number) - 1
-        return str(int(number))
 
 
 class OPS:
@@ -54,10 +37,10 @@ class OPS:
             return
 
         options = Options()
-        # options.headless = True
-        # options.add_argument("--disable-dev-shm-usage")
+        options.headless = True
+        options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--no-sandbox")
-        # options.add_argument("--disable-gpu")
+        options.add_argument("--disable-gpu")
         options.add_argument("--lang=en-us")
         options.add_argument("--remote-debugging-port=9222")
 
@@ -71,40 +54,29 @@ class OPS:
         self.found_master_index: int = -1
         self.search_input: Optional[WebElement] = None
 
-    def get_new_episodes(self, type: Types, latest_episode: str) -> List[OPSEpisodeInfo]:
-        episodes: List[OPSEpisodeInfo] = []
-        if not latest_episode:
-            latest_episode = "0"
+    def get_new_episodes(self, type: Types, latest_episode: Episode) -> List[Episode]:
+        episodes: List[Episode] = []
 
         self._login()
-
-        page_number = 1
 
         while True:
             episodes.extend(self._get_all_episodes_on_page(type))
 
-            TealPrint.debug(f"Last episode: {episodes[-1].number} - {episodes[-1].title}")
+            TealPrint.debug(f"Last episode: {episodes[-1].ops.number} - {episodes[-1].title}")
 
-            # Check if we found our latest episode
-            found_episode = False
-            for episode in episodes:
-                if episode.number == latest_episode:
-                    found_episode = True
-                    break
-
-            if found_episode:
+            # Break if we have loaded more than the previous latest episode
+            last_episode = episodes[-1]
+            if last_episode.ops.number <= latest_episode.ops.number:
                 break
 
-            # Get next page if we didn't find our latest episode
-            # page_number += 1
-            # self._next_page(page_number)
-
-            # Get the next episode number
-            last_episode = episodes[-1]
-            self._search_episode(last_episode.previous_episode())
+            # Get the previous episode
+            self._search_episode(last_episode.ops.previous_episode())
 
         # Only save later episodes than latest_episode
-        episodes = [episode for episode in episodes if float(episode.number) >= float(latest_episode)]
+        episodes = [episode for episode in episodes if episode.ops.number > latest_episode.ops.number]
+
+        # Sort episodes by number
+        episodes.sort(key=lambda episode: episode.ops.number)
 
         # Get the ffmpeg URL for each episode
         for episode in episodes:
@@ -174,10 +146,10 @@ class OPS:
 
         TealPrint.pop_indent()
 
-    def _search_episode(self, episode: str) -> None:
+    def _search_episode(self, number: float) -> None:
         TealPrint.push_indent(TealLevel.info)
 
-        TealPrint.debug(f"Searching for episode {episode}")
+        TealPrint.debug(f"Searching for episode {number}")
 
         if not self.search_input:
             self.search_input = self._get_element(By.XPATH, './/input[@type="text"]')
@@ -186,16 +158,16 @@ class OPS:
 
         # Search for the episode
         self.search_input.send_keys(Keys.CONTROL + "a")
-        self.search_input.send_keys(episode)
+        self.search_input.send_keys(f"{int(number)}")
         self.search_input.send_keys(Keys.RETURN)
 
         sleep(page_load_time)
 
         TealPrint.pop_indent()
 
-    def _get_all_episodes_on_page(self, type: Types) -> List[OPSEpisodeInfo]:
+    def _get_all_episodes_on_page(self, type: Types) -> List[Episode]:
         TealPrint.info("Getting all episodes on page", color=attr("bold"), push_indent=True)
-        episodes: List[OPSEpisodeInfo] = []
+        episodes: List[Episode] = []
 
         try:
             list_items = self.driver.find_elements(By.XPATH, ".//div[contains(@role,'listitem')]")
@@ -212,8 +184,9 @@ class OPS:
 
         return episodes
 
-    def _get_episode_info(self, type: Types, item: WebElement) -> Optional[OPSEpisodeInfo]:
-        episode = OPSEpisodeInfo()
+    def _get_episode_info(self, type: Types, item: WebElement) -> Optional[Episode]:
+        episode = Episode()
+        episode.type = type
 
         # Get Title, Number, and URL to video page
         try:
@@ -232,7 +205,7 @@ class OPS:
                 return
 
             op_type = match[1]
-            episode.number = match[2]
+            episode.ops.number = float(match[2])
 
             # Map op
             internal_type = OPS._op_type_to_internal_enum(op_type)
@@ -242,7 +215,7 @@ class OPS:
                 return None
 
             # Video URL page
-            episode.url = item.find_element(By.XPATH, ".//a").get_attribute("href")
+            episode.ops.url = item.find_element(By.XPATH, ".//a").get_attribute("href")
 
         except NoSuchElementException as e:
             TealPrint.error(f"Failed to get title and episode spans; {e.msg}", exit=True)
@@ -256,10 +229,10 @@ class OPS:
         if op_type == "Class":
             return Types.CLASS
 
-    def _get_download_url(self, episode: OPSEpisodeInfo) -> None:
+    def _get_download_url(self, episode: Episode) -> None:
         TealPrint.info(f"Getting ffmpeg URL for {episode.title}", color=attr("bold"), push_indent=True)
 
-        self.driver.get(episode.url)
+        self.driver.get(episode.ops.url)
         sleep(page_load_time)
 
         # Click on the iframe
@@ -276,7 +249,7 @@ class OPS:
             return
 
         # Convert the URL to work with yt-dlp
-        episode.download_url = url.replace(".json?base64_init=1", ".mpd?")
+        episode.ops.download_url = url.replace(".json?base64_init=1&", ".mpd?")
 
         TealPrint.info("Got ffmpeg URL", color=fg("green"), pop_indent=True)
         return
