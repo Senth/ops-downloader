@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from colored import attr
-from tealprint import TealConfig, TealLevel, TealPrint
+from tealprint import TealPrint
 
 from ..config import config
 from ..core.type import Types
@@ -35,7 +35,6 @@ class App:
         # Get new episodes from OPS site
         ops = OPS()
         new_episodes = ops.get_new_episodes(type, episode_info)
-        ops.close()
 
         next_number = 1
         if episode_info.season == datetime.now().year:
@@ -46,7 +45,9 @@ class App:
             next_number += 1
 
             TealPrint.info(f"Episode {episode.number}: {episode.title}", color=attr("bold"), push_indent=True)
-            # self.downloader.download(episode)
+            ops.get_download_url(episode)
+
+            self.downloader.download(episode)
 
             # TODO Generate subtitles
 
@@ -57,3 +58,5 @@ class App:
             self.plex.move_episode(episode)
 
             TealPrint.pop_indent()
+
+        ops.close()

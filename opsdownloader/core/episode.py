@@ -31,6 +31,9 @@ class Episode:
     ops: OPSEpisode = OPSEpisode()
     file: Path = Path("")
 
+    def __init__(self) -> None:
+        self.ops = OPSEpisode()
+
     @property
     def filename(self) -> str:
         return f"{self.type.value} - s{self.season}e{self.number} - {self.filename_title} ({self.ops.number}).mp4"

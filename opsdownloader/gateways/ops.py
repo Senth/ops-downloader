@@ -59,10 +59,9 @@ class OPS:
 
         self._login()
 
+        TealPrint.info("Getting episodes", color=attr("bold"), push_indent=True)
         while True:
             episodes.extend(self._get_all_episodes_on_page(type))
-
-            TealPrint.debug(f"Last episode: {episodes[-1].ops.number} - {episodes[-1].title}")
 
             # Break if we have loaded more than the previous latest episode
             last_episode = episodes[-1]
@@ -72,15 +71,13 @@ class OPS:
             # Get the previous episode
             self._search_episode(last_episode.ops.previous_episode())
 
+        TealPrint.pop_indent()
+
         # Only save later episodes than latest_episode
         episodes = [episode for episode in episodes if episode.ops.number > latest_episode.ops.number]
 
         # Sort episodes by number
         episodes.sort(key=lambda episode: episode.ops.number)
-
-        # Get the ffmpeg URL for each episode
-        for episode in episodes:
-            self._get_download_url(episode)
 
         return episodes
 
@@ -147,9 +144,7 @@ class OPS:
         TealPrint.pop_indent()
 
     def _search_episode(self, number: float) -> None:
-        TealPrint.push_indent(TealLevel.info)
-
-        TealPrint.debug(f"Searching for episode {number}")
+        TealPrint.info(f"Searching for episode {number}")
 
         if not self.search_input:
             self.search_input = self._get_element(By.XPATH, './/input[@type="text"]')
@@ -163,10 +158,7 @@ class OPS:
 
         sleep(page_load_time)
 
-        TealPrint.pop_indent()
-
     def _get_all_episodes_on_page(self, type: Types) -> List[Episode]:
-        TealPrint.info("Getting all episodes on page", color=attr("bold"), push_indent=True)
         episodes: List[Episode] = []
 
         try:
@@ -179,8 +171,6 @@ class OPS:
 
         except NoSuchElementException as e:
             TealPrint.error(f"Failed to get videos on page; {e.msg}", exit=True)
-
-        TealPrint.pop_indent()
 
         return episodes
 
@@ -229,8 +219,10 @@ class OPS:
         if op_type == "Class":
             return Types.CLASS
 
-    def _get_download_url(self, episode: Episode) -> None:
-        TealPrint.info(f"Getting ffmpeg URL for {episode.title}", color=attr("bold"), push_indent=True)
+    def get_download_url(self, episode: Episode) -> None:
+        TealPrint.info(
+            f"Getting ffmpeg URL for {episode.ops.number}: {episode.title}", color=attr("bold"), push_indent=True
+        )
 
         self.driver.get(episode.ops.url)
         sleep(page_load_time)
@@ -276,7 +268,7 @@ class OPS:
 
             # Add to found masters
             self.found_masters.add(url)
-            self.found_master_index = i
+            # self.found_master_index = i
             return url
 
         return None
