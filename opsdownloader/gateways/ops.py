@@ -15,7 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
-from tealprint import TealLevel, TealPrint
+from tealprint import TealPrint
 
 from ..config import config
 from ..core.episode import Episode
@@ -204,9 +204,7 @@ class OPS:
             return Types.CLASS
 
     def get_download_url(self, episode: Episode) -> None:
-        TealPrint.info(
-            f"Getting ffmpeg URL for {episode.ops.number}: {episode.title}", color=attr("bold"), push_indent=True
-        )
+        TealPrint.info(f"Getting ffmpeg URL for {episode.ops.number}: {episode.title}", push_indent=True)
 
         self.driver.get(episode.ops.url)
         sleep(page_load_time)
