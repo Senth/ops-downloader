@@ -51,4 +51,5 @@ class Episode:
             .replace(">", "")
             .replace("|", "")
             .replace("&", " and ")
+            .replace("  ", " ")
         )
