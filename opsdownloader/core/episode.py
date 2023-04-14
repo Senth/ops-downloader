@@ -36,7 +36,7 @@ class Episode:
 
     @property
     def filename(self) -> str:
-        return f"{self.type.value} - s{self.season}e{self.number} - {self.filename_title} ({self.ops.number}).mp4"
+        return f"{self.type.value} - s{self.season}e{self.number:03d} - {self.filename_title} ({self.ops.number}).mp4"
 
     @property
     def filename_title(self) -> str:
